@@ -11,6 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
+
 	mockdb "github.com/wsmbsbbz/simplebank/db/mock"
 	db "github.com/wsmbsbbz/simplebank/db/sqlc"
 	"github.com/wsmbsbbz/simplebank/util"
@@ -28,10 +29,10 @@ func TestTransferAPI(t *testing.T) {
 	account3.Currency = util.EUR
 
 	testCases := []struct {
-		name           string
-		body           gin.H
-		buildStubs     func(store *mockdb.MockStore)
-		checkResponose func(recorder *httptest.ResponseRecorder)
+		name          string
+		body          gin.H
+		buildStubs    func(store *mockdb.MockStore)
+		checkResponse func(recorder *httptest.ResponseRecorder)
 	}{
 		{
 			name: "OK",
@@ -52,7 +53,7 @@ func TestTransferAPI(t *testing.T) {
 				}
 				store.EXPECT().TransferTx(gomock.Any(), gomock.Eq(arg)).Times(1)
 			},
-			checkResponose: func(recorder *httptest.ResponseRecorder) {
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
 			},
 		},
@@ -69,7 +70,7 @@ func TestTransferAPI(t *testing.T) {
 				store.EXPECT().GetAccount(gomock.Any(), gomock.Eq(account2.ID)).Times(0)
 				store.EXPECT().TransferTx(gomock.Any(), gomock.Any()).Times(0)
 			},
-			checkResponose: func(recorder *httptest.ResponseRecorder) {
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusNotFound, recorder.Code)
 			},
 		},
@@ -86,7 +87,7 @@ func TestTransferAPI(t *testing.T) {
 				store.EXPECT().GetAccount(gomock.Any(), gomock.Eq(account2.ID)).Times(1).Return(db.Account{}, sql.ErrNoRows)
 				store.EXPECT().TransferTx(gomock.Any(), gomock.Any()).Times(0)
 			},
-			checkResponose: func(recorder *httptest.ResponseRecorder) {
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusNotFound, recorder.Code)
 			},
 		},
@@ -103,7 +104,7 @@ func TestTransferAPI(t *testing.T) {
 				store.EXPECT().GetAccount(gomock.Any(), gomock.Eq(account2.ID)).Times(0)
 				store.EXPECT().TransferTx(gomock.Any(), gomock.Any()).Times(0)
 			},
-			checkResponose: func(recorder *httptest.ResponseRecorder) {
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusBadRequest, recorder.Code)
 			},
 		},
@@ -120,7 +121,7 @@ func TestTransferAPI(t *testing.T) {
 				store.EXPECT().GetAccount(gomock.Any(), gomock.Eq(account3.ID)).Times(1).Return(account3, nil)
 				store.EXPECT().TransferTx(gomock.Any(), gomock.Any()).Times(0)
 			},
-			checkResponose: func(recorder *httptest.ResponseRecorder) {
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusBadRequest, recorder.Code)
 			},
 		},
@@ -136,7 +137,7 @@ func TestTransferAPI(t *testing.T) {
 				store.EXPECT().GetAccount(gomock.Any(), gomock.Any()).Times(0)
 				store.EXPECT().TransferTx(gomock.Any(), gomock.Any()).Times(0)
 			},
-			checkResponose: func(recorder *httptest.ResponseRecorder) {
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusBadRequest, recorder.Code)
 			},
 		},
@@ -152,7 +153,7 @@ func TestTransferAPI(t *testing.T) {
 				store.EXPECT().GetAccount(gomock.Any(), gomock.Any()).Times(0)
 				store.EXPECT().TransferTx(gomock.Any(), gomock.Any()).Times(0)
 			},
-			checkResponose: func(recorder *httptest.ResponseRecorder) {
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusBadRequest, recorder.Code)
 			},
 		},
@@ -168,7 +169,7 @@ func TestTransferAPI(t *testing.T) {
 				store.EXPECT().GetAccount(gomock.Any(), gomock.Any()).Times(1).Return(db.Account{}, sql.ErrConnDone)
 				store.EXPECT().TransferTx(gomock.Any(), gomock.Any()).Times(0)
 			},
-			checkResponose: func(recorder *httptest.ResponseRecorder) {
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusInternalServerError, recorder.Code)
 			},
 		},
@@ -185,7 +186,7 @@ func TestTransferAPI(t *testing.T) {
 				store.EXPECT().GetAccount(gomock.Any(), gomock.Eq(account2.ID)).Times(1).Return(account2, nil)
 				store.EXPECT().TransferTx(gomock.Any(), gomock.Any()).Times(1).Return(db.TransferTxResult{}, sql.ErrTxDone)
 			},
-			checkResponose: func(recorder *httptest.ResponseRecorder) {
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusInternalServerError, recorder.Code)
 			},
 		},
@@ -214,7 +215,7 @@ func TestTransferAPI(t *testing.T) {
 			require.NoError(t, err)
 
 			server.router.ServeHTTP(recorder, request)
-			tc.checkResponose(recorder)
+			tc.checkResponse(recorder)
 		})
 	}
 }
